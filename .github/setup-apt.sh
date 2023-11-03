@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export DEBIAN_FRONTEND=noninteractive
+
 # install OS prerequisites
 dpkg --add-architecture i386
 apt update

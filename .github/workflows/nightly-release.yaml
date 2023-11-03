@@ -46,10 +46,11 @@ jobs:
   build:
     # needs: activity-check
     # if: needs.activity-check.outputs.stale != 'true'
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.os }}
     strategy:
       matrix:
-        os:       [ubuntu-20.04, ubuntu-22.04]
+        os:       ['ubuntu:20.04', 'ubuntu:22.04', 'centos:7']
         mode:     [newlib, linux, musl]
         target:   [rv32gc-ilp32d, rv64gc-lp64d]
         compiler: [gcc, llvm]
@@ -58,42 +59,52 @@ jobs:
             target: rv32gc-ilp32d
           - mode: musl
             compiler: llvm
+          - os: 'centos:7'
+            compiler: llvm
     steps:
-      - name: Remove unneeded frameworks to recover disk space
-        run: |
-          echo "-- Before --"
-          df -h
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          echo "-- After --"
-          df -h
+      - name: install git
+        run: yum -y install git
+        if: ${{ startsWith(matrix.os, 'centos:') }}
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v1
 
       - name: install apt dependencies
-        run: sudo ./.github/setup-apt.sh
+        run: ./.github/setup-apt.sh
+        if: ${{ startsWith(matrix.os, 'ubuntu:') }}
+
+      - name: install yum dependencies
+        run: ./.github/setup-yum.sh
+        if: ${{ startsWith(matrix.os, 'centos:') }}
+
+      - name: add workspace as git safe directory
+        run: |
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
 
       - name: build toolchain
+        shell: bash
         run: |
+          if [ "${{ matrix.os }}" = "centos:7" ]; then
+            source scl_source enable devtoolset-11 || true
+          fi
           TARGET_TUPLE=($(echo ${{ matrix.target }} | tr "-" "\n"))
           BUILD_TOOLCHAIN="./configure --prefix=/opt/riscv --with-arch=${TARGET_TUPLE[0]} --with-abi=${TARGET_TUPLE[1]}"
-          if [ "${{ matrix.compiler }}" == "llvm" ]; then # build toolchain with llvm
+          if [ "${{ matrix.compiler }}" = "llvm" ]; then # build toolchain with llvm
             $BUILD_TOOLCHAIN --enable-llvm
           else
             $BUILD_TOOLCHAIN
           fi
-          sudo make -j $(nproc) ${{ matrix.mode }}
+          make -j$(nproc) --output-sync=target ${{ matrix.mode }}
 
       - name: build qemu
-        if: ${{ matrix.mode }} == 'linux'
+        if: ${{ matrix.mode == 'linux' && !startsWith(matrix.os, 'centos:') }}
         run: |
-          sudo make -j$(nproc) build-sim SIM=qemu
+          make -j$(nproc) --output-sync=target build-sim SIM=qemu
 
       - name: recover space
         run: |
-          sudo du -hs / 2> /dev/null || true
-          sudo rm -rf binutils dejagnu gcc gdb glibc llvm musl newlib pk qemu spike || true
-          sudo du -hs / 2> /dev/null || true
+          du -hs / 2> /dev/null || true
+          rm -rf binutils dejagnu gcc gdb glibc llvm musl newlib pk qemu spike || true
+          du -hs / 2> /dev/null || true
 
       - name: tarball build
         run: tar czvf riscv.tar.gz -C /opt/ riscv/
@@ -110,7 +121,8 @@ jobs:
             *)
               MODE="elf";;
           esac
-          echo "TOOLCHAIN_NAME=riscv$BITS-$MODE-${{ matrix.os }}-${{ matrix.compiler }}-nightly" >> $GITHUB_OUTPUT
+          echo "OS=$(echo ${{ matrix.os}} | tr ':' '-')"
+          echo "TOOLCHAIN_NAME=riscv$BITS-$MODE-$OS-${{ matrix.compiler }}-nightly" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v3
         with:

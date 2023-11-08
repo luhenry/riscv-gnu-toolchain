@@ -76,14 +76,10 @@ jobs:
         run: ./.github/setup-yum.sh
         if: ${{ startsWith(matrix.os, 'centos:') }}
 
-      - name: add workspace as git safe directory
-        run: |
-          set -x
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}/*"
-
       - name: build toolchain
         shell: bash
         run: |
+          git config --global --add safe.directory '*'
           if [ "${{ matrix.os }}" = "centos:7" ]; then
             source scl_source enable devtoolset-11 || true
           fi

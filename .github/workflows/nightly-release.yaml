@@ -112,8 +112,9 @@ jobs:
 
       - name: generate prebuilt toolchain name
         id:   toolchain-name-generator
+        shell: bash
         run: |
-          if [[ "${{ matrix.target }}" == *"32"* ]]; then BITS=32; else BITS=64; fi
+          if [ "${{ matrix.target }}" = *"32"* ]; then BITS=32; else BITS=64; fi
           case "${{ matrix.mode }}" in
             "linux")
               MODE="glibc";;

@@ -49,6 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os:       ['ubuntu:20.04', 'ubuntu:22.04', 'centos:7']
         mode:     [newlib, linux, musl]

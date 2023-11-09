@@ -5,6 +5,9 @@ on:
     - cron:  '0 0 * * ?'
   push:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # activity-check:
@@ -112,7 +115,7 @@ jobs:
 
       - name: generate prebuilt toolchain name
         id:   toolchain-name-generator
-        shell: bash
+        shell: bash --noprofile --norc -ex -o pipefail {0}
         run: |
           if [ "${{ matrix.target }}" = *"32"* ]; then BITS=32; else BITS=64; fi
           case "${{ matrix.mode }}" in

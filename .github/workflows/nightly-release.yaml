@@ -63,8 +63,6 @@ jobs:
             target: rv32gc-ilp32d
           - mode: musl
             compiler: llvm
-          - os: 'centos:7'
-            compiler: llvm
     steps:
       - name: install git
         run: yum -y install git
@@ -88,7 +86,26 @@ jobs:
           mkdir -p /opt/cmake
           wget https://cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}-linux-x86_64.sh
           bash cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}-linux-x86_64.sh --prefix=/opt/cmake --skip-license
+          rm cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}-linux-x86_64.sh
           echo "PATH=/opt/cmake/bin:$PATH" >> $GITHUB_ENV
+
+      - name: install python
+        env:
+            PYTHON_VERSION: "3.8"
+            PYTHON_VERSION_PATCH: "18"
+        run: |
+          mkdir -p /opt/python
+          wget https://www.python.org/ftp/python/${PYTHON_VERSION}.${PYTHON_VERSION_PATCH}/Python-${PYTHON_VERSION}.${PYTHON_VERSION_PATCH}.tgz
+          tar xzf Python-${PYTHON_VERSION}.${PYTHON_VERSION_PATCH}.tgz
+          pushd Python-${PYTHON_VERSION}.${PYTHON_VERSION_PATCH}
+          ./configure --prefix=/opt/python
+          make -j$(nproc)
+          make altinstall
+          popd
+          rm -rf Python-${PYTHON_VERSION}.${PYTHON_VERSION_PATCH}
+          ln -sr /opt/python/bin/python${PYTHON_VERSION} /opt/python/bin/python3
+          echo "PATH=/opt/python/bin:$PATH" >> $GITHUB_ENV
+        if: ${{ matrix.compiler == 'llvm' && startsWith(matrix.os, 'centos:') }}
 
       - name: add workspace as git safe directory
         run: |

@@ -126,7 +126,7 @@ jobs:
             *)
               MODE="elf";;
           esac
-          echo "OS=$(echo ${{ matrix.os}} | tr ':' '-')"
+          OS=$(echo ${{ matrix.os}} | tr ':' '-')
           echo "TOOLCHAIN_NAME=riscv$BITS-$MODE-$OS-${{ matrix.compiler }}-nightly" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v3

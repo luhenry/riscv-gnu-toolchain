@@ -79,6 +79,7 @@ jobs:
         if: ${{ startsWith(matrix.os, 'centos:') }}
 
       - name: install cmake
+        shell: bash --noprofile --norc -ex -o pipefail {0}
         env:
           CMAKE_VERSION: "3.20"
           CMAKE_VERSION_PATCH: "6"
@@ -90,6 +91,7 @@ jobs:
           echo "PATH=/opt/cmake/bin:$PATH" >> $GITHUB_ENV
 
       - name: install python
+        shell: bash --noprofile --norc -ex -o pipefail {0}
         env:
             PYTHON_VERSION: "3.8"
             PYTHON_VERSION_PATCH: "18"
@@ -112,7 +114,7 @@ jobs:
           git config --global --add safe.directory '*'
 
       - name: build toolchain
-        shell: bash
+        shell: bash --noprofile --norc -ex -o pipefail {0}
         run: |
           if [ "${{ matrix.os }}" = "centos:7" ]; then
             source scl_source enable devtoolset-11 || true

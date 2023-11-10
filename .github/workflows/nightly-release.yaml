@@ -85,8 +85,10 @@ jobs:
           CMAKE_VERSION: "3.20"
           CMAKE_VERSION_PATCH: "6"
         run: |
+          mkdir -p /opt/cmake
           wget https://cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}-linux-x86_64.sh
-          bash cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}-linux-x86_64.sh --prefix=/ --skip-license
+          bash cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}-linux-x86_64.sh --prefix=/opt/cmake --skip-license
+          echo "PATH=/opt/cmake/bin:$PATH" >> $GITHUB_ENV
 
       - name: add workspace as git safe directory
         run: |

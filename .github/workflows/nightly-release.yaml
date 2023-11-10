@@ -86,7 +86,7 @@ jobs:
           CMAKE_VERSION_PATCH: "6"
         run: |
           wget https://cmake.org/files/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}-linux-x86_64.sh
-          ./cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}-linux-x86_64.sh --prefix=/ --skip-license
+          bash cmake-${CMAKE_VERSION}.${CMAKE_VERSION_PATCH}-linux-x86_64.sh --prefix=/ --skip-license
 
       - name: add workspace as git safe directory
         run: |
